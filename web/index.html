@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple WebSocket Chat</title>
+</head>
+<body>
+    <div id="chat"></div>
+    <input type="text" id="username" placeholder="Your Name">
+    <input type="color" id="color" value="#000000">
+    <input type="text" id="messageInput" placeholder="Enter message">
+    <button onclick="joinChat()">Connection</button>
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:5050');
+        const chatDiv = document.getElementById('chat');
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'system') {
+                const systemDiv = document.createElement('div');
+                systemDiv.style.color = '#00ff4c';
+                systemDiv.innerHTML = data.message;
+                chatDiv.appendChild(systemDiv);
+            } else if (data.type === 'chat') {
+                const messageDiv = document.createElement('div');
+                messageDiv.style.color = data.color;
+                messageDiv.innerHTML = `<strong>${data.user}:</strong> ${data.message}`;
+                chatDiv.appendChild(messageDiv);
+            }
+        };
+
+        function joinChat() {
+            const username = document.getElementById('username').value;
+            const color = document.getElementById('color').value;
+            const data = { type: 'join', user: username, color: color };
+            socket.send(JSON.stringify(data));
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const username = document.getElementById('username').value;
+            const color = document.getElementById('color').value;
+            const message = messageInput.value;
+            const data = { type: 'chat', user: username, message: message, color: color };
+            socket.send(JSON.stringify(data));
+            messageInput.value = '';
+        }
+    </script>
+</body>
+</html>
